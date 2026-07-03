@@ -94,10 +94,9 @@ PostgreSQL returned:
  32 kB
 (1 row)
 
-
 This is expected for an empty table — it only contains metadata and page alignment.
 ----------------------------------------------------------------------------------------------------
-We did not choose the 70B model for this estate. Although the math is shown for 
+We did not choose the 70B model for this estate. Although the math is shown for In 
 comparison, the 70B model is far larger, significantly more expensive to store, 
 and unnecessary for a small school AI assistant. The 13B model provides excellent 
 performance for internal Q&A and RAG while keeping storage costs low and the 
