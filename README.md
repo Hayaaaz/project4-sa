@@ -46,7 +46,5 @@ cd system-admin-and-maintenance-code/04-storage-administration/code/
 3. Run the script on your PostgreSQL instance:
 sudo -u postgres psql -f pgvector_setup.sql
 
-4. Measure the size of the empty table:
-SELECT pg_total_relation_size('chunks');
 My measured output was **32 kB**, which is expected for an empty pgvector table 
 (metadata + page alignment).
