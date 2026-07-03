@@ -1,0 +1,54 @@
+version: 1
+owner: storage-admin@school.example
+review_cadence_days: 90
+
+tiers:
+  hot:     { media: nvme_ssd,  iops_floor: 50000, target_usd_per_gb_month: 0.20 }                     # Model weights must stay hot because inference requires fast access.
+  warm:    { media: sata_ssd,  iops_floor: 5000,  target_usd_per_gb_month: 0.08 }                     # Raw vectors can be warm because they are not accessed per-query.
+  cold:    { media: hdd_raid6, iops_floor: 150,   target_usd_per_gb_month: 0.02 }                     # RAG corpus is cold because it is read occasionally.
+  archive: { media: object_glacier_class, retrieval_hours: 12, target_usd_per_gb_month: 0.004 }       # Fine-tuning dataset is archive because it is rarely accessed.
+
+classes:
+  - name: model_weights_13B
+    sensitivity: internal
+    tier: hot
+    irreplaceable: true
+    retention: indefinite
+    lineage_required: true
+    justification: Model weights are core intellectual property and must be served live with low latency.
+
+  - name: vector_index_hnsw
+    sensitivity: internal
+    tier: hot
+    irreplaceable: false
+    retention: while_in_service
+    justification: The HNSW index is required for real-time similarity search and must remain on hot storage.
+
+  - name: raw_vectors
+    sensitivity: internal
+    tier: warm
+    irreplaceable: false
+    retention: while_in_service
+    justification: Raw embeddings are accessed frequently but not per-query; warm storage is sufficient.
+
+  - name: rag_corpus
+    sensitivity: internal
+    tier: cold
+    retention_years: 5
+    Justification: RAG documents include internal policies and procedures. They are accessed occasionally and
+      can tolerate slower storage.
+
+  - name: fine_tuning_dataset
+    sensitivity: confidential
+    tier: archive
+    retention_years: 1
+    lineage_required: true
+    justification: Fine-tuning examples may contain curated internal Q&A pairs. They are rarely accessed and
+      retained only for retraining or audit purposes.
+
+  - name: logs_and_scratch
+    sensitivity: internal
+    tier: cold
+    retention_days: 30
+    worm: false
+    justification: Logs and scratch data contain operational metadata. Short retention reduces risk and cost.
