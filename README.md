@@ -38,7 +38,7 @@ https://github.com/mlitman/system-admin-and-maintenance-code
 To reproduce my pgvector proof:
 
 1. Clone the professor’s repository:
-git clone https://github.com/mlitman/system-admin-and-maintenance-code.git (github.com in Bing)
+git clone https://github.com/mlitman/system-admin-and-maintenance-code.git 
 
 2. Navigate to the pgvector setup script:
 cd system-admin-and-maintenance-code/04-storage-administration/code/
