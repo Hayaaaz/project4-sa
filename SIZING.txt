@@ -1,0 +1,105 @@
+1. Model Weight Sizing  
+Before doing the storage math, I looked at the two model sizes used in the course: 13B and 70B. 
+The 13B model is the realistic choice for a small school AI estate because it fits comfortably 
+on local storage and is commonly deployed for internal RAG systems. The 70B model is included 
+only for comparison, to show how much larger the storage footprint becomes at higher parameter 
+counts. For the actual estate sizing, I use the 13B model.
+
+Quantization chosen: INT4 (0.5 bytes per weight)
+
+13B model:
+Params: 13,000,000,000
+Bytes per weight: 0.5
+Formula: 13,000,000,000 × 0.5 = 6,500,000,000 bytes
+= 6.5 GB on disk
+
+70B model:
+Params: 70,000,000,000
+Bytes per weight: 0.5
+Formula: 70,000,000,000 × 0.5 = 35,000,000,000 bytes
+= 35 GB on disk
+------------------------------------------------------------------------------------------
+
+2. Vector Database Sizing  
+The vector store holds 5 million embeddings, each with 1536 dimensions.  
+I used halfvec (2 bytes per dimension) because it’s the recommended precision
+for pgvector and halves storage while maintaining good recall.
+
+- Raw vectors:  
+  5,000,000 × 1536 × 2 bytes  
+  = 15.36 GB
+
+- HNSW index overhead (~10%):
+  15.36 GB × 0.10  
+  = 1.536 GB
+
+-Total vector store: 
+  15.36 GB + 1.536 GB  
+  ≈ 16.9 GB
+-----------------------------------------------------------------------------------------------------
+
+3. Dataset Sizing  
+
+RAG Corpus  
+I assumed the system serves as an internal knowledge base (policies, FAQs, procedures, tickets).  
+- 10,000 documents  
+- 200 KB each  
+- Total ≈ **2 GB**
+
+Fine‑Tuning Dataset  
+I assumed a small curated dataset of Q&A pairs.  
+- 500 pairs  
+- 50 KB each  
+- Total ≈ 25 MB
+---------------------------------------------------------------------------------------------------------
+
+4. Total Estate Size  
+Here is the combined storage footprint:
+
+- 13B INT4 model weights: 6.5 GB  
+- Vector database: 16.9 GB  
+- RAG corpus: 2 GB  
+- Fine‑tuning dataset: 25 MB  
+
+Total:  
+6.5 + 16.9 + 2 + 0.025 = 25.425 GB ≈ 25.5 GB
+=====================================================================================
+This is what we are buying: ~25.5 GB of storage capacity for the school’s AI estate.
+=====================================================================================
+
+5. Tiering Table  
+My (lsblk)  output shows (/dev/sda2) is rotational (ROTA=1), meaning it’s a spinning HDD with low IOPS.  
+Cold and archived data fit naturally here.  
+Hot-tier assets would normally live on SSD/NVMe in production.
+
+
+Asset                     | Tier     | Reason
+---------------------------------------------------------------
+Model weights             | Hot      | Used live; needs fast access
+Vector index (HNSW)       | Hot      | Real-time similarity search
+Raw vectors               | Warm     | Accessed often but not per-query
+RAG corpus                | Cold     | Read occasionally; low IOPS is fine
+Fine-tuning dataset       | Archive  | Rarely accessed; long-term storage
+Logs / scratch            | Cold     | Low IOPS; temporary data
+------------------------------------------------------------------------------------------------------
+
+6. pgvector Proof  
+I created the pgvector table using the course-provided script and measured its size.
+
+PostgreSQL returned:
+
+
+ total_size 
+-------------
+ 32 kB
+(1 row)
+
+
+This is expected for an empty table — it only contains metadata and page alignment.
+----------------------------------------------------------------------------------------------------
+We did not choose the 70B model for this estate. Although the math is shown for 
+comparison, the 70B model is far larger, significantly more expensive to store, 
+and unnecessary for a small school AI assistant. The 13B model provides excellent 
+performance for internal Q&A and RAG while keeping storage costs low and the 
+The overall estate is simple to operate.
+.
