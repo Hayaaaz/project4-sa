@@ -15,6 +15,7 @@ The estate includes:
 - Supporting metadata, logs, and scratch space
 
 All sizing decisions are based on realistic assumptions and grounded in actual hardware output from my system.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 2. Model Weight Sizing
 Before calculating storage, I compared the two model sizes used in the course: 13B and 70B. For a small school AI assistant,
@@ -23,6 +24,7 @@ The 13B model is the practical choice because:
 - It fits comfortably on local storage
 - It is commonly used for internal RAG systems
 - It provides strong performance without high cost
+ ----------------------------------------------------
 
 The 70B model is included only to show the difference in scale.
 
@@ -37,10 +39,11 @@ The 70B model is included only to show the difference in scale.
 - Total: 35 GB
 
 For the estate sizing, I use the 13B model.
+-----------------------------------------------------------------------------------------------------------------------------
 
 3. Vector Database Sizing
 The vector store contains 5 million embeddings, each with 1536 dimensions. I used halfvec (2 bytes per dimension) because 
-it is the recommended precision for pgvector, reducing storage while maintaining high recall.
+It is the recommended precision for pgvector, reducing storage while maintaining high recall.
 
 Raw vectors:
 5,000,000 × 1536 × 2 bytes = 15.36 GB
@@ -50,6 +53,7 @@ HNSW index overhead (~10%):
 
 Total vector store:
 ≈ 16.9 GB
+-----------------------------------------------------------------------------------------------------------------------------
 
 4. Dataset Sizing
 RAG Corpus:
@@ -80,9 +84,10 @@ Total:
 6.5 + 16.9 + 2 + 0.025 = 25.425 GB ≈ 25.5 GB
 
 This is what we are buying: ~25.5 GB of storage capacity for the school’s AI estate.
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 6. Tiering Decisions
-My lsblk output shows that /dev/sda2 is rotational (ROTA=1), meaning it is a spinning HDD with low IOPS. Cold and archive data fit naturally here.
+My lsblk output shows that /dev/sda2 is rotational (ROTA=1), meaning it is a spinning HDD with low IOPS. Cold and archived data fit naturally here.
 Hot‑tier assets would normally live on SSD/NVMe in production.
 
 Asset                 Tier       Reason
@@ -93,6 +98,8 @@ Raw vectors           Warm       Accessed often but not per‑query
 RAG corpus            Cold       Read occasionally; low IOPS acceptable
 Fine‑tuning dataset   Archive    Rarely accessed; long‑term retention
 Logs / scratch        Cold       Temporary metadata; low IOPS
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
 
 7. pgvector Proof
 I ran the course‑provided pgvector_setup.sql script on my PostgreSQL instance. The extension was already installed, the table and index were created, 
@@ -107,22 +114,26 @@ I then measured the size of the empty chunks table:
 
 This is expected for an empty pgvector table because it contains only metadata and page alignment.
 A screenshot of the output is included in the repository.
+----------------------------------------------------------------------------------------------------------------
 
 7. Predict vs Measure Discussion
 The predicted size of the empty chunks table is extremely small because it contains only metadata and page alignment.
 pgvector does not store any embeddings until data is inserted. The measured size returned by PostgreSQL was 32 kB,
 which matches the expected footprint for an empty table. This confirms that the pgvector extension is installed correctly 
 and that the storage behavior aligns with the predicted sizing.
+-----------------------------------------------------------------------------------------------------------------------
 
 8. Model Choice Justification
 Although the 70B model is shown for comparison, I did not choose it for this estate. It is significantly larger and more expensive to store,
   and unnecessary for a small school AI assistant.
 
 The 13B model provides excellent performance for internal Q&A and RAG while keeping storage costs low and the estate simple to operate.
+-------------------------------------------------------------------------------------------------------------------------
 
 9. AI Usage Statement
 AI tools were used to assist with formatting, organization, and clarity of the report, and to help break down or clarify certain technical points.
 All calculations, decisions, and technical work were performed by me.
+---------------------------------------------------------------------------------------------------------------------------------
 
 10. Conclusion
 The total storage requirement for the school’s AI estate is approximately 25.5 GB. All assets are classified into appropriate storage tiers,
