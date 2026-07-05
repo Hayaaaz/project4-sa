@@ -22,8 +22,7 @@ Formula: 70,000,000,000 × 0.5 = 35,000,000,000 bytes
 
 2. Vector Database Sizing  
 The vector store holds 5 million embeddings, each with 1536 dimensions.  
-I used halfvec (2 bytes per dimension) because it’s the recommended precision
-for pgvector and halves storage while maintaining good recall.
+I used halfvec since it offers the best balance between storage efficiency and recall quality for pgvector.
 
 - Raw vectors:  
   5,000,000 × 1536 × 2 bytes  
@@ -96,9 +95,8 @@ PostgreSQL returned:
 
 This is expected for an empty table — it only contains metadata and page alignment.
 ----------------------------------------------------------------------------------------------------
-We did not choose the 70B model for this estate. Although the math is shown for In 
+We did not choose the 70B model for this estate. Although the math is shown for In  
 comparison, the 70B model is far larger, significantly more expensive to store, 
 and unnecessary for a small school AI assistant. The 13B model provides excellent 
 performance for internal Q&A and RAG while keeping storage costs low and the 
 The overall estate is simple to operate.
-.
